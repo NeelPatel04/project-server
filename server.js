@@ -102,7 +102,7 @@ let blogs = [
         author: "Dr. Liam Chen"
     }
 
-];
+]; 
 
 app.get("/api/dest/", (req, res) => {
     res.send(dest);
