@@ -104,7 +104,9 @@ let blogs = [
 
 ]; 
 
+// Destination endpoints
 app.get("/api/dest/", (req, res) => {
+    console.log("in get request for destinations");
     res.send(dest);
 });
 
@@ -113,40 +115,35 @@ app.get("/api/dest/:id", (req, res) => {
     res.send(destination);
 });
 
+// Blog endpoints
 app.get("/api/blogs/", (req, res) => {
+    console.log("Getting all blogs");
     res.send(blogs);
 });
 
 app.get("/api/blogs/:id", (req, res) => {
-    const blog = blogs.find((b) => b.id === parseInt(req.params.id));
+    const blog = blogs.find((b) => b._id === parseInt(req.params.id));
     res.send(blog);
 });
 
-const validateBlog = (blog) => {
-    const schema = Joi.object({
-        id: Joi.allow(""),
-        title: Joi.string().min(3).required(),
-        content: Joi.string().min(10).required(),
-        author: Joi.string().min(2).required(),
-    });
-
-    return schema.validate(blog);
-};
-
 app.post("/api/blogs", upload.single("img"), (req, res) => {
+    console.log("in post request for blog");
     const result = validateBlog(req.body);
 
     if (result.error) {
-        return res.status(400).send(result.error.details[0].message);
+        console.log("Validation error:", result.error);
+        res.status(400).send(result.error.details[0].message);
+        return;
     }
 
     const blog = {
-        id: blogs.length + 1,
+        _id: blogs.length + 1,
         title: req.body.title,
         content: req.body.content,
         author: req.body.author,
     };
 
+    // Adding image
     if (req.file) {
         blog.img = "images/" + req.file.filename;
     }
@@ -154,6 +151,63 @@ app.post("/api/blogs", upload.single("img"), (req, res) => {
     blogs.push(blog);
     res.status(200).send(blog);
 });
+
+// Edit blog
+app.put("/api/blogs/:id", upload.single("img"), (req, res) => {
+    console.log("in put request for blog");
+    const id = parseInt(req.params.id);
+    const result = validateBlog(req.body);
+
+    if (result.error) {
+        console.log("Validation error:", result.error);
+        res.status(400).send(result.error.details[0].message);
+        return;
+    }
+
+    let blog = blogs.find((b) => b._id === id);
+
+    if (!blog) {
+        res.status(404).send("Blog not found");
+        return;
+    }
+
+    blog.title = req.body.title;
+    blog.content = req.body.content;
+    blog.author = req.body.author;
+
+    // Update image if new uploaded
+    if (req.file) {
+        blog.img = "images/" + req.file.filename;
+    }
+
+    res.status(200).send(blog);
+});
+
+// Delete blog
+app.delete("/api/blogs/:id", (req, res) => {
+    console.log("in delete request for blog");
+    const id = parseInt(req.params.id);
+    const index = blogs.findIndex((b) => b._id === id);
+
+    if (index === -1) {
+        res.status(404).send("Blog not found");
+        return;
+    }
+
+    blogs.splice(index, 1);
+    res.status(200).send({ message: "Blog deleted successfully" });
+});
+
+const validateBlog = (blog) => {
+    const schema = Joi.object({
+        _id: Joi.allow(""),
+        title: Joi.string().min(3).required(),
+        content: Joi.string().min(10).required(),
+        author: Joi.string().min(2).required(),
+    });
+
+    return schema.validate(blog);
+};
 
 app.listen(3001, () => {
     console.log("Server is up and running");
