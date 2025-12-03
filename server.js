@@ -100,7 +100,7 @@ let blogs = [
         "content": "As 1,000-year-old temple spires emerge from mist and monks chant ancient Pali verses, you understand why Khmers called this 'City of Gods.' We climbed hidden staircases to explore secret libraries where Sanskrit texts still whisper forgotten wisdom, revealing the Khmer Empire's cosmic architecture that rivals Egypt's precision.",
         "author": "Dr. Liam Chen"
     }
-];
+]; 
 
 // Destination endpoints
 app.get("/api/dest/", (req, res) => {
