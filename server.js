@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const Joi = require("joi");
-
 const app = express();
 app.use(express.static("public"));
 app.use(express.json());
@@ -10,13 +9,13 @@ app.use(cors());
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "./public/images/");
+      cb(null, "./public/images/");
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname);
+      cb(null, file.originalname);
     },
 });
-
+  
 const upload = multer({ storage: storage });
 
 let dest = [    
@@ -152,11 +151,19 @@ app.post("/api/blogs", upload.single("img"), (req, res) => {
     res.status(200).send(blog);
 });
 
-// Edit blog
+// PUT - Edit blog
 app.put("/api/blogs/:id", upload.single("img"), (req, res) => {
     console.log("in put request for blog");
+    console.log("Request body:", req.body);
     const id = parseInt(req.params.id);
-    const result = validateBlog(req.body);
+    
+    const dataToValidate = {
+        title: req.body.title,
+        content: req.body.content,
+        author: req.body.author
+    };
+    
+    const result = validateBlogEdit(dataToValidate);
 
     if (result.error) {
         console.log("Validation error:", result.error);
@@ -175,7 +182,7 @@ app.put("/api/blogs/:id", upload.single("img"), (req, res) => {
     blog.content = req.body.content;
     blog.author = req.body.author;
 
-    // Update image if new uploaded
+    // Update image if new one is uploaded
     if (req.file) {
         blog.img = "images/" + req.file.filename;
     }
@@ -183,7 +190,7 @@ app.put("/api/blogs/:id", upload.single("img"), (req, res) => {
     res.status(200).send(blog);
 });
 
-// Delete blog
+// DELETE - Delete blog
 app.delete("/api/blogs/:id", (req, res) => {
     console.log("in delete request for blog");
     const id = parseInt(req.params.id);
@@ -201,6 +208,16 @@ app.delete("/api/blogs/:id", (req, res) => {
 const validateBlog = (blog) => {
     const schema = Joi.object({
         _id: Joi.allow(""),
+        title: Joi.string().min(3).required(),
+        content: Joi.string().min(10).required(),
+        author: Joi.string().min(2).required(),
+    });
+
+    return schema.validate(blog);
+};
+
+const validateBlogEdit = (blog) => {
+    const schema = Joi.object({
         title: Joi.string().min(3).required(),
         content: Joi.string().min(10).required(),
         author: Joi.string().min(2).required(),
